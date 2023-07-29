@@ -14,6 +14,8 @@ RUN npm install
 # Bundle app source
 COPY . .
 
-EXPOSE 8080
+ARG PORT=8080
+
+EXPOSE ${PORT}
 
 CMD [ "node", "main.js" ]
