@@ -1,17 +1,22 @@
-const express = require('express');
+const http = require('http');
 require('dotenv').config();
 
-const PORT = process.env.PORT;
-const HOST = process.env.HOST;
+const { getProducts } = require('./controllers/main')
 
-const app = express();
+const PORT = process.env.PORT || 1234;
+const HOST = process.env.HOST || '0.0.0.0';
 
-// handle HTTP request
-app.get('/', (req, res) => {
-    console.log('received request');
-    res.send('hello world');
+const server = http.createServer((req, res) => {
+    if (req.url === '/api/products' && req.method === 'GET') {
+        getProducts(req, res)
+        return
+    }
+
+    res.writeHead(404, {
+        'Content-Type': 'application/json'
+    });
+    res.end(JSON.stringify({ error: "route not found"}))
+    return
 })
 
-app.listen(PORT, HOST, () => {
-    console.log('starting application at %s:%d', HOST, PORT)
-})
+server.listen(PORT, () => console.log(`server running at ${HOST}:${PORT}`))
