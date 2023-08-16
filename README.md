@@ -1,2 +1,2 @@
 # learn-nodejs
-a project to understand node
+a project to understand nodejs
