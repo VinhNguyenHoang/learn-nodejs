@@ -1,37 +1,57 @@
 import { IncomingMessage, ServerResponse } from "http";
 
-const controllerList = new Map<string, (req: IncomingMessage, res: ServerResponse) => void>();
+type HTTPHandler = (req: IncomingMessage, res: ServerResponse) => void;
 
-function RegisterController(name: string, handler: (req: IncomingMessage, res: ServerResponse) => void) {
-    console.log("registering controller")
-    controllerList.set(name, handler)
-}
+class Router {
+    controllerList: Map<string, Map<string,HTTPHandler>>;
 
-function HandleRouting(req: IncomingMessage, res: ServerResponse) {
-    try {
-        let segments = req.url.split("/")
-        let controlerName = segments[2]
-        console.log("having list")
-        console.log(controllerList)
-        // check HTTP METHOD
-        switch (req.method) {
-            case "GET":
-                console.log("receiving GET request")
-                break;
-            default:
-                break;
+    constructor() {
+        this.controllerList = new Map(
+            [
+                ["GET", new Map()],
+                ["POST", new Map()],
+                ["PUT", new Map()],
+                ["DELETE", new Map()]
+            ]
+        );
+    }
+
+    SetRoute(method: string, name: string, handler: HTTPHandler) {
+        if (this.controllerList.has(method)) {
+            let methodHandlers = this.controllerList.get(method)
+            methodHandlers.set(name, handler)
+            this.controllerList.set(method, methodHandlers)
+        } else {
+            throw new Error(`method ${method} is not supported`)
         }
+    }
 
-        res.writeHead(404, {
-            'Content-Type': 'application/json'
-        });
-        res.end(JSON.stringify({ error: "route not found"}))
-    } catch (error) {
-        console.log(error)
+    HandleRouting(req: IncomingMessage, res: ServerResponse) {
+        try {
+            let segments = req.url.split("/")
+            let controlerName = segments[2]
+
+            console.log(`receiving ${req.method} request for ${controlerName}`)
+            let methodHandlers = this.controllerList.get(req.method)
+            if (methodHandlers.has(controlerName)) {
+                methodHandlers.get(controlerName)(req, res)
+            } else {
+                // return 404 not found
+                res.writeHead(404, {
+                    'Content-Type': 'application/json'
+                });
+                res.end(JSON.stringify({ error: "route not found"}))
+            }
+
+        } catch (error) {
+            console.log(error)
+        }
     }
 }
 
+const router = new Router()
+
 export {
-    HandleRouting,
-    RegisterController
+    router,
+    Router
 }

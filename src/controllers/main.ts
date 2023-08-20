@@ -1,4 +1,11 @@
-import { RegisterController } from '../router/handler'
-import { getProducts } from './product'
+import { router } from '../router/handler'
+import { productController } from './product'
 
-RegisterController("products", getProducts)
+console.log("running here")
+
+try {
+    // registering handlers
+    router.SetRoute("GET", "products", productController.GetProducts)
+} catch (error) {
+    console.log(error)
+}
